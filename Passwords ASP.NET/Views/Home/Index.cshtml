@@ -1,0 +1,156 @@
+﻿@using Passwords_ASP.NET.Models;
+@model Passwords_ASP.NET.Models.Site
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="row">
+    <div class="col-md-2"></div>
+     <div class="col-md-3">
+         <div class="list-group">
+             <p class="control-label" align="center"><strong>Sites list:</strong></p>
+
+             @foreach (var site in ViewBag.Sites)
+             {
+                 <!-- Id for data-target-->
+                 string id = "#" + site.Id;
+                 <p class="list-group-item" align="center" data-toggle="collapse" data-target="@id"><strong>@site.name</strong></p>
+                 <div id="@site.Id" class="collapse">
+                     <div class="list-group-item">
+                         <p align="center">login: @site.login</p>
+                         <p align="center">password: @site.password</p>
+
+                         <button type="button" class="btn btn-primary" id="EditSite" onclick="Edit(@site.Id, '@site.name', '@site.login', '@site.password')">Edit</button>
+                         <button type="button" class="btn btn-danger" id="DeleteSite" style="float:" onclick="Delete(@site.Id, '@site.name')">Delete</button>
+                     </div>
+                 </div>
+             }
+         </div>
+     </div>
+
+     <div class="col-md-5">
+        @using (Html.BeginForm("AddSite", "Home", FormMethod.Post, new { @class = "form-horizontal" }))
+        {
+            <div class="form-group">
+                <label class="control-label col-md-3" for="name">Site:<font color="red">*</font></label>
+                <div class="col-md-9">
+                    @Html.EditorFor(x => x.name, new { htmlAttributes = new { @class = "form-control", placeholder = "Enter site name", required = "required" } })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-md-3" for="login">Login:<font color="red">*</font></label>
+                <div class="col-md-9">
+                    @Html.EditorFor(x => x.login, new { htmlAttributes = new { @class = "form-control", placeholder = "Enter login", required = "required" } })
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-md-3" for="password">Password:<font color="red">*</font></label>
+                <div class="col-md-9">
+                    @Html.EditorFor(x => x.password, new { htmlAttributes = new { @class = "form-control", type = "password", placeholder = "Enter password", required = "required", id = "password" } })
+                    <div class="checkbox">
+                        <label><input type="checkbox" onchange="document.getElementById('password').type = this.checked ? 'text' : 'password'">Show password</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-3 col-md-3">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <button type="submit" class="btn btn-primary" id="AddSite">Add site</button>
+                        </div>
+
+                        <div class="col-md-offset-5 col-md-3">
+                            <button type="button" class="btn btn-primary" id="SaveChanges" onclick="Save()" disabled>Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-3 col-md-3">
+                    <button type="button" class="btn btn-primary" id="PasswordGenerator" onclick="GeneratePassword()">Generate password</button>
+                </div>
+            </div>
+        }
+     </div>
+    <div class="col-md-2"></div>
+</div>
+
+<script type="text/javascript">
+    var editSiteId;
+
+    function Delete(siteId, name)
+    {
+        var result = confirm("Do you really want delete all data for " + name + "?");
+
+        if (result == true)
+        {
+            $.ajax({
+                cache: false,
+                type: "POST",
+                url: "/Home/DeleteSite/",
+                data: {
+                    id: siteId
+                },
+                success: function ()
+                {
+                    window.location = "/";
+                }
+            });
+        }
+    }
+
+    function Edit(id, name, login, password)
+    {
+        editSiteId = id;
+
+        $("#name").val(name);
+        $("#login").val(login);
+        $("#password").val(password);
+
+        $("#AddSite").prop("disabled", true);
+        $("#SaveChanges").prop("disabled", false);
+    }
+
+    function Save()
+    {
+        $.ajax({
+            cache: false,
+            type: "POST",
+            url: "/Home/EditSite/",
+            data: {
+                id: editSiteId,
+                name: $("#name").val(),
+                login: $("#login").val(),
+                password: $("#password").val()
+            },
+            success: function ()
+            {
+                window.location = "/";
+            }
+        });
+
+        $("#AddSite").prop("disabled", false);
+        $("#SaveChanges").prop("disabled", true);
+    }
+
+    function GeneratePassword()
+    {
+        var passwordLength = prompt("Enter password length:");
+
+        var password = "";
+        var random = Math.random();
+        const symbols = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890";
+
+        for (i = 0; i < passwordLength; i++)
+        {
+            password += symbols.charAt(Math.floor(Math.random() * symbols.length));
+        }
+
+        $("#password").val(password);
+    }
+</script>
